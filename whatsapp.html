@@ -48,40 +48,43 @@
 <body>
   <div class="box">
     <div class="spinner"></div>
-    <p>Abriendo WhatsApp...</p>
-    <p><a id="manualLink" href="#">Si no pasa nada, haz clic aquí</a></p>
+    <p id="mensajeEstado">Abriendo WhatsApp...</p>
+    <p><a id="manualLink" href="#" target="_blank">Si no pasa nada, haz clic aquí</a></p>
   </div>
 
   <script>
-    // Lee el número (y opcionalmente un mensaje) desde la URL,
-    // ej: whatsapp.html?numero=573001234567&mensaje=Hola
     var params = new URLSearchParams(window.location.search);
     var numero = params.get('numero');
-    var mensaje = params.get('mensaje') || '';
 
     if (numero) {
-      var waAppUrl = 'whatsapp://send?phone=' + numero + (mensaje ? '&text=' + encodeURIComponent(mensaje) : '');
-      var waWebUrl = 'https://wa.me/' + numero + (mensaje ? '?text=' + encodeURIComponent(mensaje) : '');
+      var waWebUrl = 'https://wa.me/' + numero;
       document.getElementById('manualLink').href = waWebUrl;
 
-      // Intento 1: abrir WhatsApp Desktop directo (protocolo whatsapp://)
-      window.location.href = waAppUrl;
+      // Abrimos wa.me NOSOTROS (en vez de que Power BI lo abra directo),
+      // para quedarnos con una referencia y poder cerrarla si hace falta.
+      var waWindow = window.open(waWebUrl, '_blank');
 
-      // Intentamos cerrar casi de inmediato, igual que con "Llamar",
-      // mientras el navegador todavía reconoce esto como acción del usuario.
-      setTimeout(function () {
-        window.close();
-      }, 150);
+      var perdioFoco = false;
+      window.addEventListener('blur', function () {
+        perdioFoco = true;
+      });
 
-      // Revisión aparte, un poco más tardía: si seguimos vivos (no se
-      // pudo cerrar, o nadie interceptó el protocolo), caemos a
-      // WhatsApp Web en esta misma pestaña, sin intentar cerrarla más.
       setTimeout(function () {
-        document.querySelector('.box p').textContent = 'Abriendo WhatsApp Web...';
-        window.location.href = waWebUrl;
-      }, 1800);
+        if (perdioFoco) {
+          // El navegador perdió el foco: lo más probable es que
+          // WhatsApp Desktop se abrió y tomó el control. Cerramos
+          // tanto la pestaña de wa.me como esta.
+          try { waWindow.close(); } catch (e) { /* nada que hacer */ }
+          window.close();
+        } else {
+          // Nadie se llevó el foco: probablemente se quedó en
+          // WhatsApp Web. Dejamos esa pestaña como está y solo
+          // cerramos esta, que ya no hace falta.
+          window.close();
+        }
+      }, 2500);
     } else {
-      document.querySelector('.box p').textContent = 'No se recibió ningún número de teléfono.';
+      document.getElementById('mensajeEstado').textContent = 'No se recibió ningún número de teléfono.';
     }
   </script>
 </body>
