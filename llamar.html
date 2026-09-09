@@ -65,12 +65,11 @@
       // así que aquí la redirección a tel: no está bloqueada.
       window.location.href = telUrl;
 
-      // Le damos un momento a que el sistema operativo alcance a
-      // recibir la solicitud y abrir Enlace Móvil, y luego cerramos
-      // esta pestaña sola para no dejarla estorbando.
+      // Intentamos cerrar casi de inmediato: los navegadores suelen
+      // bloquear el cierre si pasa mucho tiempo desde la acción del usuario.
       setTimeout(function () {
         window.close();
-      }, 1200);
+      }, 150);
     } else {
       document.querySelector('.box p').textContent = 'No se recibió ningún número de teléfono.';
     }
