@@ -49,7 +49,7 @@
   <div class="box">
     <div class="spinner"></div>
     <p id="mensajeEstado">Abriendo WhatsApp...</p>
-    <p><a id="manualLink" href="#" target="_blank">Si no pasa nada, haz clic aquí</a></p>
+    <p><a id="manualLink" href="#" target="ventana_whatsapp">Si no pasa nada, haz clic aquí</a></p>
   </div>
 
   <script>
@@ -60,29 +60,16 @@
       var waWebUrl = 'https://wa.me/' + numero;
       document.getElementById('manualLink').href = waWebUrl;
 
-      // Abrimos wa.me NOSOTROS (en vez de que Power BI lo abra directo),
-      // para quedarnos con una referencia y poder cerrarla si hace falta.
-      var waWindow = window.open(waWebUrl, '_blank');
+      // Esta página NO corre dentro del sandbox de Power BI, así que
+      // aquí sí funciona la reutilización de una ventana con nombre:
+      // siempre la misma pestaña 'ventana_whatsapp', sin acumular.
+      window.open(waWebUrl, 'ventana_whatsapp');
 
-      var perdioFoco = false;
-      window.addEventListener('blur', function () {
-        perdioFoco = true;
-      });
-
+      // Cerramos esta página intermedia casi de inmediato: ya cumplió
+      // su función (abrir o reutilizar la pestaña de WhatsApp).
       setTimeout(function () {
-        if (perdioFoco) {
-          // El navegador perdió el foco: lo más probable es que
-          // WhatsApp Desktop se abrió y tomó el control. Cerramos
-          // tanto la pestaña de wa.me como esta.
-          try { waWindow.close(); } catch (e) { /* nada que hacer */ }
-          window.close();
-        } else {
-          // Nadie se llevó el foco: probablemente se quedó en
-          // WhatsApp Web. Dejamos esa pestaña como está y solo
-          // cerramos esta, que ya no hace falta.
-          window.close();
-        }
-      }, 2500);
+        window.close();
+      }, 150);
     } else {
       document.getElementById('mensajeEstado').textContent = 'No se recibió ningún número de teléfono.';
     }
