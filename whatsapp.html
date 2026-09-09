@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Redirigiendo a WhatsApp...</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: #F3F6FB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .box {
+    text-align: center;
+    background: #FFFFFF;
+    padding: 32px 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .box p {
+    color: #4B5563;
+    font-size: 14px;
+    margin: 12px 0 0;
+  }
+  .box a {
+    color: #22B573;
+    font-size: 14px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #E5E7EB;
+    border-top-color: #22B573;
+    border-radius: 50%;
+    margin: 0 auto;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner"></div>
+    <p>Abriendo WhatsApp...</p>
+    <p><a id="manualLink" href="#">Si no pasa nada, haz clic aquí</a></p>
+  </div>
+
+  <script>
+    // Lee el número (y opcionalmente un mensaje) desde la URL,
+    // ej: whatsapp.html?numero=573001234567&mensaje=Hola
+    var params = new URLSearchParams(window.location.search);
+    var numero = params.get('numero');
+    var mensaje = params.get('mensaje') || '';
+
+    if (numero) {
+      var waAppUrl = 'whatsapp://send?phone=' + numero + (mensaje ? '&text=' + encodeURIComponent(mensaje) : '');
+      var waWebUrl = 'https://wa.me/' + numero + (mensaje ? '?text=' + encodeURIComponent(mensaje) : '');
+      document.getElementById('manualLink').href = waWebUrl;
+
+      var seFueALaApp = false;
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          seFueALaApp = true;
+        }
+      });
+
+      // Intento 1: abrir WhatsApp Desktop directo (protocolo whatsapp://)
+      window.location.href = waAppUrl;
+
+      // Después de un momento, revisamos qué pasó:
+      setTimeout(function () {
+        if (seFueALaApp) {
+          // Sí abrió la app de escritorio: esta pestaña ya no sirve, la cerramos.
+          window.close();
+        } else {
+          // Nadie interceptó el protocolo (no tiene WhatsApp Desktop):
+          // seguimos con WhatsApp Web en esta misma pestaña, sin cerrarla.
+          document.querySelector('.box p').textContent = 'Abriendo WhatsApp Web...';
+          window.location.href = waWebUrl;
+        }
+      }, 1500);
+    } else {
+      document.querySelector('.box p').textContent = 'No se recibió ningún número de teléfono.';
+    }
+  </script>
+</body>
+</html>
