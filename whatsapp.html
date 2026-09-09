@@ -49,7 +49,7 @@
   <div class="box">
     <div class="spinner"></div>
     <p id="mensajeEstado">Abriendo WhatsApp...</p>
-    <p><a id="manualLink" href="#" target="ventana_whatsapp">Si no pasa nada, haz clic aquí</a></p>
+    <p><a id="manualLink" href="#" target="ventana_whatsapp" style="display:inline-block; margin-top:8px; padding:8px 16px; background:#22B573; color:#FFFFFF; border-radius:6px;">Abrir WhatsApp manualmente</a></p>
   </div>
 
   <script>
@@ -63,13 +63,27 @@
       // Esta página NO corre dentro del sandbox de Power BI, así que
       // aquí sí funciona la reutilización de una ventana con nombre:
       // siempre la misma pestaña 'ventana_whatsapp', sin acumular.
-      window.open(waWebUrl, 'ventana_whatsapp');
+      var waWindow = window.open(waWebUrl, 'ventana_whatsapp');
 
-      // Cerramos esta página intermedia casi de inmediato: ya cumplió
-      // su función (abrir o reutilizar la pestaña de WhatsApp).
-      setTimeout(function () {
-        window.close();
-      }, 150);
+      var fueBloqueada =
+        !waWindow ||
+        waWindow.closed ||
+        typeof waWindow.closed === 'undefined';
+
+      if (fueBloqueada) {
+        // El navegador bloqueó la ventana emergente: no cerramos esta
+        // página, y avisamos claramente qué hacer.
+        document.querySelector('.spinner').style.display = 'none';
+        document.getElementById('mensajeEstado').innerHTML =
+          'Tu navegador bloqueó la ventana de WhatsApp.<br>' +
+          'Busca el ícono de "ventana emergente bloqueada" en la barra de direcciones ' +
+          '(usualmente a la derecha) y elige "Permitir siempre".';
+      } else {
+        // Se abrió bien: cerramos esta página intermedia casi de inmediato.
+        setTimeout(function () {
+          window.close();
+        }, 150);
+      }
     } else {
       document.getElementById('mensajeEstado').textContent = 'No se recibió ningún número de teléfono.';
     }
