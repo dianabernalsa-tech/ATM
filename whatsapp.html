@@ -64,28 +64,22 @@
       var waWebUrl = 'https://wa.me/' + numero + (mensaje ? '?text=' + encodeURIComponent(mensaje) : '');
       document.getElementById('manualLink').href = waWebUrl;
 
-      var seFueALaApp = false;
-      document.addEventListener('visibilitychange', function () {
-        if (document.hidden) {
-          seFueALaApp = true;
-        }
-      });
-
       // Intento 1: abrir WhatsApp Desktop directo (protocolo whatsapp://)
       window.location.href = waAppUrl;
 
-      // Después de un momento, revisamos qué pasó:
+      // Intentamos cerrar casi de inmediato, igual que con "Llamar",
+      // mientras el navegador todavía reconoce esto como acción del usuario.
       setTimeout(function () {
-        if (seFueALaApp) {
-          // Sí abrió la app de escritorio: esta pestaña ya no sirve, la cerramos.
-          window.close();
-        } else {
-          // Nadie interceptó el protocolo (no tiene WhatsApp Desktop):
-          // seguimos con WhatsApp Web en esta misma pestaña, sin cerrarla.
-          document.querySelector('.box p').textContent = 'Abriendo WhatsApp Web...';
-          window.location.href = waWebUrl;
-        }
-      }, 1500);
+        window.close();
+      }, 150);
+
+      // Revisión aparte, un poco más tardía: si seguimos vivos (no se
+      // pudo cerrar, o nadie interceptó el protocolo), caemos a
+      // WhatsApp Web en esta misma pestaña, sin intentar cerrarla más.
+      setTimeout(function () {
+        document.querySelector('.box p').textContent = 'Abriendo WhatsApp Web...';
+        window.location.href = waWebUrl;
+      }, 1800);
     } else {
       document.querySelector('.box p').textContent = 'No se recibió ningún número de teléfono.';
     }
